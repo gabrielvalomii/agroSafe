@@ -7,6 +7,8 @@ from .models import CadastroVisitantePortaria, NivelVisitante, RegistroAcessoPor
 
 from django.utils import timezone
 
+from validate_docbr import CPF
+
 def _norm_nome(s: str | None) -> str:
 	return (s or '').strip()
 
@@ -70,7 +72,10 @@ def foto(request):
 	documento = request.session.get('porteiro_documento')
 	empresa = request.session.get('porteiro_empresa')
 	nivel = request.session.get('porteiro_nivel')
+	cpf_validator = CPF(documento)
 	if not modo or not nome or not documento:
+		return redirect('porteiro_inicio')
+	if not cpf_validator.validate(documento):
 		return redirect('porteiro_inicio')
 	if modo == 'cadastro_novo' and (not empresa or not nivel or nivel not in NivelVisitante.values):
 		return redirect('porteiro_inicio')

@@ -6,6 +6,8 @@ import json
 from django.utils import timezone
 from datetime import timedelta
 from django.shortcuts import render
+from validate_docbr import CNPJ
+from django.core.exceptions import ValidationError
 
 def home(request):
     if request.method == 'POST':
@@ -33,9 +35,13 @@ def cadastro_page(request):
         telefone = request.POST.get('telefone')
         email_corporativo = request.POST.get('email_corporativo')
         senha = request.POST.get('senha')
+        CNPJ_validator = CNPJ()
         
         if not nome or not CNPJ or not senha:
             return render(request, 'main/cadastro.html', {'erro': 'Nome, CNPJ e senha são obrigatórios.'})
+        
+        if not CNPJ_validator.validate(CNPJ):
+            return render(request, 'main/cadastro.html', {'erro': 'CNPJ inválido.'})
         
         if Granja.objects.filter(CNPJ=CNPJ).exists():
             return render(request, 'main/cadastro.html', {'erro': 'CNPJ já cadastrado.'})
@@ -64,8 +70,11 @@ def cadastrar_granja(request):
 			telefone = data.get('telefone')
 			email_corporativo = data.get('email_corporativo')
 			senha = data.get('senha')
+			CNPJ_validator = CNPJ()
 			if not nome or not CNPJ or not senha:
 				return JsonResponse({'erro': 'Nome, CNPJ e senha são obrigatórios.'}, status=400)
+			if not CNPJ_validator.validate(CNPJ):
+				return JsonResponse({'erro': 'CNPJ inválido.'}, status=400)
 			if Granja.objects.filter(CNPJ=CNPJ).exists():
 				return JsonResponse({'erro': 'CNPJ já cadastrado.'}, status=400)
 			senha_hash = make_password(senha)
