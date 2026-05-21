@@ -38,11 +38,18 @@ def inicio(request):
 		documento = _norm_doc(request.POST.get('documento'))
 		empresa = _norm_doc(request.POST.get('empresa'))
 		nivel = (request.POST.get('nivel') or '').strip()
+		cpf_validator = CPF(documento)
 		if not nome or not documento or not empresa or not nivel:
 			return render(
 				request,
 				'main/porteiro/inicio.html',
 				{'erro': 'Todos os campos são obrigatórios.'},
+			)
+		if not cpf_validator.validate(documento):
+			return render(
+				request,
+				'main/porteiro/inicio.html',
+				{'erro': 'CPF inválido.'},
 			)
 		if nivel not in NivelVisitante.values:
 			return render(
@@ -72,10 +79,7 @@ def foto(request):
 	documento = request.session.get('porteiro_documento')
 	empresa = request.session.get('porteiro_empresa')
 	nivel = request.session.get('porteiro_nivel')
-	cpf_validator = CPF(documento)
 	if not modo or not nome or not documento:
-		return redirect('porteiro_inicio')
-	if not cpf_validator.validate(documento):
 		return redirect('porteiro_inicio')
 	if modo == 'cadastro_novo' and (not empresa or not nivel or nivel not in NivelVisitante.values):
 		return redirect('porteiro_inicio')
